@@ -1,0 +1,381 @@
+/* Reset e configurações básicas */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: #ecf0f1;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Container principal */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Header */
+#game-header {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #3498db;
+}
+
+#game-header h1 {
+    color: #3498db;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#game-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Botões */
+button {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+button:hover {
+    background: linear-gradient(145deg, #2980b9, #3498db);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+}
+
+button:disabled {
+    background: #7f8c8d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Main container */
+#game-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Seção do mapa */
+#map-section {
+    flex: 1;
+    position: relative;
+    background: #34495e;
+    border-right: 2px solid #3498db;
+}
+
+#hex-map {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    background: radial-gradient(circle, #2c3e50, #1a252f);
+}
+
+#hex-map:active {
+    cursor: grabbing;
+}
+
+#map-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#map-controls button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    padding: 0;
+}
+
+/* Painel lateral */
+#game-panel {
+    width: 350px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Seções do painel */
+.panel-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+#player-status,
+#current-hex-info,
+#actions-panel,
+#event-log {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+#player-status h3,
+#current-hex-info h3,
+#actions-panel h3,
+#event-log h3 {
+    color: #3498db;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    border-bottom: 1px solid rgba(52, 152, 219, 0.3);
+    padding-bottom: 0.3rem;
+}
+
+/* Display de tempo */
+#time-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.5rem;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+}
+
+#clock {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e74c3c;
+}
+
+#period {
+    background: #3498db;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}
+
+/* Pontos de jornada */
+#journey-points {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+#pj-current {
+    font-weight: bold;
+    color: #2ecc71;
+    font-size: 1.2rem;
+}
+
+#pj-max {
+    color: #95a5a6;
+}
+
+/* Informações do hex */
+#current-hex-info div {
+    margin-bottom: 0.3rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+#current-hex-info label {
+    font-weight: bold;
+}
+
+/* Cores dos terrenos */
+.terrain-geleira { color: #E6F3FF; }
+.terrain-pantano { color: #8B4513; }
+.terrain-floresta { color: #228B22; }
+.terrain-planicie { color: #90EE90; }
+.terrain-deserto { color: #F4A460; }
+.terrain-colina { color: #DEB887; }
+.terrain-montanha { color: #696969; }
+.terrain-oceano { color: #4682B4; }
+
+/* Ações */
+#actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.action-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem;
+    background: rgba(46, 204, 113, 0.2);
+    border: 1px solid #2ecc71;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-button:hover {
+    background: rgba(46, 204, 113, 0.3);
+    transform: translateX(5px);
+}
+
+.action-button.disabled {
+    background: rgba(127, 140, 141, 0.2);
+    border-color: #7f8c8d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.action-cost {
+    font-size: 0.8rem;
+    color: #f39c12;
+}
+
+/* Log de eventos */
+#event-log {
+    flex: 1;
+    min-height: 150px;
+}
+
+#log-content {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+}
+
+.log-entry {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease-in;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: #2c3e50;
+    padding: 2rem;
+    border-radius: 10px;
+    border: 2px solid #3498db;
+    max-width: 400px;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    #game-main {
+        flex-direction: column;
+    }
+    
+    #game-panel {
+        width: 100%;
+        height: 40vh;
+        order: 2;
+    }
+    
+    #map-section {
+        height: 60vh;
+        order: 1;
+    }
+    
+    #game-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    #game-controls {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+}
+
+/* Animações para hexágonos */
+.hex-hover {
+    filter: brightness(1.2);
+    transition: filter 0.2s ease;
+}
+
+.hex-current {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Scrollbar customizada */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
