@@ -60,10 +60,19 @@ class UIManager {
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
         this.canvas.addEventListener('click', (e) => this.handleClick(e));
+        this.canvas.addEventListener('contextmenu', (e) => this.handleRightClick(e));
         this.canvas.addEventListener('wheel', (e) => this.handleWheel(e));
 
         // Redimensionamento
         window.addEventListener('resize', () => this.resizeCanvas());
+
+        // Fechar menu de contexto ao clicar fora
+        document.addEventListener('click', (e) => this.hideContextMenu());
+        document.addEventListener('contextmenu', (e) => {
+            if (!this.canvas.contains(e.target)) {
+                this.hideContextMenu();
+            }
+        });
 
         // Modal
         document.getElementById('modal-confirm').addEventListener('click', () => {
@@ -125,28 +134,18 @@ class UIManager {
     handleClick(e) {
         if (this.isDragging) return;
         
+        // Esconde o menu de contexto se estiver visível
+        this.hideContextMenu();
+    }
+
+    handleRightClick(e) {
+        e.preventDefault(); // Previne o menu de contexto padrão do navegador
+        
         const mousePos = this.getMousePos(e);
         const hexCoords = this.game.hexManager.pixelToHex(mousePos.x, mousePos.y);
         
-        // Verifica se clicou em um hexágono válido
-        const clickedHex = this.game.hexManager.getHex(hexCoords.q, hexCoords.r);
-        const currentHex = this.game.hexManager.getCurrentHex();
-        
-        if (!currentHex) return;
-        
-        // Verifica se é um hexágono adjacente
-        const adjacent = this.game.hexManager.getAdjacentHexes(currentHex.q, currentHex.r);
-        const isAdjacent = adjacent.some(adj => adj.q === hexCoords.q && adj.r === hexCoords.r);
-        
-        if (isAdjacent) {
-            if (!clickedHex || !clickedHex.discovered) {
-                // Revelar hexágono
-                this.game.performAction('revelar', hexCoords);
-            } else {
-                // Viajar para hexágono
-                this.game.performAction('viajar', hexCoords);
-            }
-        }
+        // Mostra o menu de contexto
+        this.showContextMenu(mousePos.x, mousePos.y, hexCoords);
     }
 
     handleWheel(e) {
@@ -260,35 +259,102 @@ class UIManager {
             document.getElementById('hex-danger').textContent = dangerInfo.name;
             document.getElementById('hex-coords').textContent = `Hex (${currentHex.q}, ${currentHex.r})`;
         }
-        
-        // Atualiza ações disponíveis
-        this.updateAvailableActions();
     }
 
-    // Atualiza ações disponíveis
-    updateAvailableActions() {
-        const actionsContainer = document.getElementById('actions-list');
-        actionsContainer.innerHTML = '';
+    // Mostra o menu de contexto
+    showContextMenu(x, y, hexCoords) {
+        const contextMenu = document.getElementById('context-menu');
+        const currentHex = this.game.hexManager.getCurrentHex();
         
-        const actions = this.game.getAvailableActions();
+        if (!currentHex) return;
+        
+        // Determina que tipo de ações estão disponíveis
+        const clickedHex = this.game.hexManager.getHex(hexCoords.q, hexCoords.r);
+        const adjacent = this.game.hexManager.getAdjacentHexes(currentHex.q, currentHex.r);
+        const isCurrentHex = hexCoords.q === currentHex.q && hexCoords.r === currentHex.r;
+        const isAdjacent = adjacent.some(adj => adj.q === hexCoords.q && adj.r === hexCoords.r);
+        
+        let actions = [];
+        
+        if (isCurrentHex) {
+            // Ações no hex atual
+            actions = this.game.getAvailableActions().filter(action => 
+                ['explorar', 'descansar', 'forragear', 'cacar', 'pescar', 'procurar_agua', 'acampar'].includes(action.id)
+            );
+        } else if (isAdjacent) {
+            // Ações para hexágonos adjacentes
+            if (!clickedHex || !clickedHex.discovered) {
+                actions = [this.game.createActionInfo('revelar')];
+            } else {
+                actions = [
+                    this.game.createActionInfo('viajar'),
+                    this.game.createActionInfo('marchar')
+                ];
+            }
+        }
+        
+        if (actions.length === 0) {
+            return; // Não mostra menu se não há ações
+        }
+        
+        // Popula o menu de contexto
+        this.populateContextMenu(actions, hexCoords);
+        
+        // Posiciona o menu
+        const rect = this.canvas.getBoundingClientRect();
+        const menuX = rect.left + x;
+        const menuY = rect.top + y;
+        
+        // Ajusta posição para não sair da tela
+        const menuWidth = 250;
+        const menuHeight = Math.min(300, actions.length * 50 + 60);
+        
+        let finalX = menuX;
+        let finalY = menuY;
+        
+        if (menuX + menuWidth > window.innerWidth) {
+            finalX = window.innerWidth - menuWidth - 10;
+        }
+        
+        if (menuY + menuHeight > window.innerHeight) {
+            finalY = window.innerHeight - menuHeight - 10;
+        }
+        
+        contextMenu.style.left = `${finalX}px`;
+        contextMenu.style.top = `${finalY}px`;
+        contextMenu.classList.remove('hidden');
+    }
+    
+    // Popula o menu de contexto com ações
+    populateContextMenu(actions, hexCoords) {
+        const actionsContainer = document.getElementById('context-menu-actions');
+        actionsContainer.innerHTML = '';
         
         actions.forEach(action => {
             const actionElement = document.createElement('div');
-            actionElement.className = `action-button ${action.enabled ? '' : 'disabled'}`;
+            actionElement.className = `context-menu-item ${action.enabled ? '' : 'disabled'}`;
             
             actionElement.innerHTML = `
-                <span>${action.name}</span>
-                <span class="action-cost">${action.cost} PJ / ${action.time}h</span>
+                <span class="context-menu-action-name">${action.name}</span>
+                <span class="context-menu-action-cost">${action.cost} PJ / ${action.time}h</span>
             `;
             
             if (action.enabled) {
-                actionElement.addEventListener('click', () => {
-                    this.game.performAction(action.id);
+                actionElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.game.performAction(action.id, hexCoords);
+                    this.hideContextMenu();
                 });
             }
             
             actionsContainer.appendChild(actionElement);
         });
+    }
+    
+    // Esconde o menu de contexto
+    hideContextMenu() {
+        const contextMenu = document.getElementById('context-menu');
+        contextMenu.classList.add('hidden');
     }
 
     // Adiciona entrada no log

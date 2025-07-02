@@ -284,6 +284,118 @@ button:disabled {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Menu de contexto */
+.context-menu {
+    position: fixed;
+    background: rgba(44, 62, 80, 0.95);
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    z-index: 1001;
+    min-width: 200px;
+    max-width: 300px;
+    animation: contextMenuFadeIn 0.2s ease-out;
+}
+
+.context-menu.hidden {
+    display: none;
+}
+
+.context-menu-header {
+    background: rgba(52, 152, 219, 0.2);
+    padding: 0.8rem;
+    border-bottom: 1px solid rgba(52, 152, 219, 0.3);
+    border-radius: 6px 6px 0 0;
+}
+
+.context-menu-header span {
+    color: #3498db;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+#context-menu-actions {
+    padding: 0.5rem 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.context-menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.context-menu-item:last-child {
+    border-bottom: none;
+}
+
+.context-menu-item:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: translateX(3px);
+}
+
+.context-menu-item.disabled {
+    background: rgba(127, 140, 141, 0.1);
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+}
+
+.context-menu-item.disabled:hover {
+    background: rgba(127, 140, 141, 0.1);
+    transform: none;
+}
+
+.context-menu-action-name {
+    font-weight: 500;
+    color: #ecf0f1;
+}
+
+.context-menu-action-cost {
+    font-size: 0.8rem;
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.context-menu-item.disabled .context-menu-action-name {
+    color: #7f8c8d;
+}
+
+.context-menu-item.disabled .context-menu-action-cost {
+    color: #95a5a6;
+}
+
+@keyframes contextMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Instruções no painel */
+#instructions {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+#instructions p {
+    margin-bottom: 0.5rem;
+}
+
+#instructions strong {
+    color: #3498db;
+}
+
 /* Modal */
 .modal {
     position: fixed;

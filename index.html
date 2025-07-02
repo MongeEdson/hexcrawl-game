@@ -58,11 +58,12 @@
                     <div id="hex-coords">Hex (0, 0)</div>
                 </div>
 
-                <!-- Ações disponíveis -->
+                <!-- Ações disponíveis (agora apenas informativo) -->
                 <div id="actions-panel">
-                    <h3>Ações Disponíveis</h3>
-                    <div id="actions-list">
-                        <!-- Ações serão inseridas dinamicamente -->
+                    <h3>Instruções</h3>
+                    <div id="instructions">
+                        <p>Clique com o <strong>botão direito</strong> em um hexágono para ver as ações disponíveis.</p>
+                        <p>Use os controles de zoom (+/-) e centralizar (⌂) para navegar pelo mapa.</p>
                     </div>
                 </div>
 
@@ -75,6 +76,16 @@
                 </div>
             </aside>
         </main>
+
+        <!-- Menu de contexto -->
+        <div id="context-menu" class="context-menu hidden">
+            <div class="context-menu-header">
+                <span id="context-menu-title">Ações Disponíveis</span>
+            </div>
+            <div id="context-menu-actions">
+                <!-- Ações serão inseridas dinamicamente -->
+            </div>
+        </div>
 
         <!-- Modal para confirmações -->
         <div id="modal" class="modal hidden">
