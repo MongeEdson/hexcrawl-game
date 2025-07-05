@@ -261,27 +261,118 @@ button:disabled {
 #event-log {
     flex: 1;
     min-height: 150px;
+    background: rgba(44, 62, 80, 0.9);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+#event-log h3 {
+    color: #3498db;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
 }
 
 #log-content {
     max-height: 200px;
     overflow-y: auto;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 .log-entry {
-    padding: 0.3rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    animation: fadeIn 0.5s ease-in;
+    margin-bottom: 0.3rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid transparent;
+    animation: logEntryFadeIn 0.3s ease-out;
 }
 
 .log-entry:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.log-timestamp {
+    color: #95a5a6;
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
+}
+
+.log-message {
+    color: #ecf0f1;
+}
+
+/* Tipos de log */
+.log-info {
+    border-left-color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.log-test-pass {
+    border-left-color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+}
+
+.log-test-pass .log-message {
+    color: #2ecc71;
+}
+
+.log-test-fail {
+    border-left-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.log-test-fail .log-message {
+    color: #e74c3c;
+}
+
+.log-system {
+    border-left-color: #9b59b6;
+    background: rgba(155, 89, 182, 0.1);
+}
+
+.log-system .log-message {
+    color: #bb8fce;
+}
+
+.log-debug {
+    border-left-color: #f39c12;
+    background: rgba(243, 156, 18, 0.1);
+}
+
+.log-debug .log-message {
+    color: #f4d03f;
+}
+
+.log-error {
+    border-left-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.15);
+}
+
+.log-error .log-message {
+    color: #ec7063;
+    font-weight: bold;
+}
+
+.log-success {
+    border-left-color: #27ae60;
+    background: rgba(39, 174, 96, 0.15);
+}
+
+.log-success .log-message {
+    color: #58d68d;
+    font-weight: bold;
+}
+
+@keyframes logEntryFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 /* Menu de contexto */

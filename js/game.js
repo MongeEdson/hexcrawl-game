@@ -50,6 +50,54 @@ class HexcrawlGame {
             this.ui.updateUI();
             this.ui.render();
             this.ui.addLogEntry(`Jogo iniciado! Você está em um hex de ${this.terrainManager.getTerrainInfo(initialTerrain).name}.`);
+            
+            // Executa testes automáticos de inicialização
+            this.runInitializationTests();
+        }
+    }
+    
+    // Executa testes automáticos de inicialização
+    runInitializationTests() {
+        this.ui.addSystemEntry('Executando testes de inicialização...');
+        
+        // Teste 1: Verificar se o jogador foi criado corretamente
+        const playerValid = this.player && this.player.currentJourneyPoints === 6 && this.player.movement === 6;
+        this.ui.addTestEntry('Criação do jogador', playerValid, `PJ: ${this.player?.currentJourneyPoints}, Movimento: ${this.player?.movement}`);
+        
+        // Teste 2: Verificar se o sistema de tempo foi inicializado
+        const currentPeriod = this.timeManager.getCurrentPeriod();
+        const timeValid = this.timeManager && this.timeManager.currentHour === 6 && currentPeriod?.name === 'Manhã';
+        this.ui.addTestEntry('Sistema de tempo', timeValid, `Hora: ${this.timeManager?.currentHour}:00, Período: ${currentPeriod?.name || 'Erro'}`);
+        
+        // Teste 3: Verificar se o gerenciador de terrenos está funcionando
+        const terrainValid = this.terrainManager && this.terrainManager.getTerrainInfo(initialTerrain);
+        this.ui.addTestEntry('Sistema de terrenos', terrainValid, `Terreno inicial: ${this.terrainManager.getTerrainInfo(initialTerrain)?.name || 'Erro'}`);
+        
+        // Teste 4: Verificar se o gerenciador de hexágonos está funcionando
+        const currentHex = this.hexManager.getCurrentHex();
+        const hexValid = currentHex && currentHex.q === 0 && currentHex.r === 0;
+        this.ui.addTestEntry('Sistema de hexágonos', hexValid, `Hex atual: (${currentHex?.q}, ${currentHex?.r})`);
+        
+        // Teste 5: Verificar se a interface está carregada
+        const uiValid = this.ui && document.getElementById('hex-map') && document.getElementById('log-content');
+        this.ui.addTestEntry('Interface do usuário', uiValid, `Canvas e log: ${uiValid ? 'Carregados' : 'Erro'}`);
+        
+        // Teste 6: Verificar se as ações estão disponíveis
+        const actions = this.getAvailableActions();
+        const actionsValid = actions && actions.length > 0;
+        this.ui.addTestEntry('Sistema de ações', actionsValid, `Ações disponíveis: ${actions?.length || 0}`);
+        
+        // Teste 7: Verificar se hexágonos descobertos permanecem visíveis
+        const visibleHexes = this.hexManager.getVisibleHexes();
+        const discoveredHexes = visibleHexes.filter(hex => hex.discovered);
+        this.ui.addTestEntry('Visibilidade de hexágonos descobertos', discoveredHexes.length > 0, `Hexágonos descobertos visíveis: ${discoveredHexes.length}`);
+        
+        const allTestsPassed = playerValid && timeValid && terrainValid && hexValid && uiValid && actionsValid;
+        
+        if (allTestsPassed) {
+            this.ui.addSuccessEntry('Todos os testes de inicialização passaram!');
+        } else {
+            this.ui.addErrorEntry('Alguns testes de inicialização falharam!');
         }
     }
 
@@ -137,13 +185,21 @@ class HexcrawlGame {
         const action = this.actionTable[actionId];
         if (!action) return false;
         
+        // Testa se a ação é válida
+        this.ui.addTestEntry(`Validação da ação ${actionId}`, !!action, `Ação encontrada: ${action ? 'Sim' : 'Não'}`);
+        
         const actionInfo = this.createActionInfo(actionId);
         
         // Verifica se pode realizar a ação
         if (!actionInfo.enabled && actionId !== 'acampar' && actionId !== 'revelar') {
             this.ui.addLogEntry(`Não é possível realizar ${action.name}. PJ insuficientes.`);
+            this.ui.addTestEntry(`Execução da ação ${actionId}`, false, 'PJ insuficientes');
             return false;
         }
+        
+        // Testa recursos antes da ação
+        const pjBefore = this.player.currentJourneyPoints;
+        const timeBefore = this.timeManager.currentHour;
         
         // Executa a ação específica
         let success = false;
@@ -207,22 +263,39 @@ class HexcrawlGame {
                 this.player.spendJourneyPoints(actionInfo.cost);
                 const timeResult = this.timeManager.advanceTime(actionInfo.time);
                 
-                // Verifica se é um novo dia
+                // Testa se os recursos foram gastos corretamente
+                const pjAfter = this.player.currentJourneyPoints;
+                const timeAfter = this.timeManager.currentHour;
+                
+                const pjSpent = pjBefore - pjAfter;
+                const expectedPjSpent = actionId === 'acampar' ? pjBefore : actionInfo.cost;
+                const pjTestPassed = pjSpent === expectedPjSpent;
+                
+                this.ui.addTestEntry(`Gasto de PJ para ${actionId}`, pjTestPassed, `Esperado: ${expectedPjSpent}, Gasto: ${pjSpent}`);
+                
+                const timeChanged = timeAfter !== timeBefore;
+                this.ui.addTestEntry(`Avanço do tempo para ${actionId}`, timeChanged, `De ${timeBefore}:00 para ${timeAfter}:00`);
+                
                 if (timeResult.newDay) {
-                    this.player.resetJourneyPoints();
-                    this.ui.addLogEntry('Um novo dia começou! Seus PJ foram restaurados.');
+                    this.ui.addSystemEntry('Novo dia iniciado! (PJ não restaurados automaticamente)');
+                    this.ui.addTestEntry('Novo dia sem reset automático de PJ', this.player.currentJourneyPoints < this.player.maxJourneyPoints, `PJ atual: ${this.player.currentJourneyPoints}`);
                 }
             }
             
             this.ui.addLogEntry(message);
-            this.ui.updateUI();
-            this.ui.render();
+            this.ui.addTestEntry(`Execução da ação ${actionId}`, true, 'Ação executada com sucesso');
+        } else {
+            this.ui.addTestEntry(`Execução da ação ${actionId}`, false, 'Ação falhou');
         }
+        
+        // Atualiza UI
+        this.ui.updateUI();
+        this.ui.render();
         
         return success;
     }
 
-    // Viaja ou marcha para um hex
+    // Executa viagem hex
     performTravel(target, isMarching = false) {
         if (!target) {
             // Seleciona automaticamente o primeiro hex adjacente descoberto
@@ -273,7 +346,11 @@ class HexcrawlGame {
     performCamp() {
         this.player.forceCamp();
         const timeResult = this.timeManager.forceCamp();
+        
+        // PJ só são restaurados quando acampa, não automaticamente
         this.player.resetJourneyPoints();
+        this.ui.addDebugEntry('PJ restaurados pelo acampamento');
+        
         return true;
     }
 

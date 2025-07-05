@@ -218,13 +218,10 @@ class HexManager {
             }
         });
         
-        // Adiciona outros hexágonos descobertos próximos
+        // CORREÇÃO: Adiciona TODOS os hexágonos descobertos, independente da distância
         this.hexMap.forEach(hex => {
             if (hex.discovered && !visible.find(v => v.key === hex.key)) {
-                const distance = Math.abs(hex.q - this.currentHex.q) + Math.abs(hex.r - this.currentHex.r);
-                if (distance <= 3) { // Mostra hexágonos em um raio de 3
-                    visible.push(hex);
-                }
+                visible.push(hex);
             }
         });
         

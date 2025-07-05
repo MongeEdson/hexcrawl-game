@@ -358,19 +358,58 @@ class UIManager {
     }
 
     // Adiciona entrada no log
-    addLogEntry(message) {
+    addLogEntry(message, type = 'info') {
         const logContent = document.getElementById('log-content');
+        
         const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.textContent = message;
+        entry.className = `log-entry log-${type}`;
+        
+        const timestamp = new Date().toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
+        
+        entry.innerHTML = `
+            <span class="log-timestamp">[${timestamp}]</span>
+            <span class="log-message">${message}</span>
+        `;
         
         logContent.appendChild(entry);
         logContent.scrollTop = logContent.scrollHeight;
         
-        // Remove entradas antigas se houver muitas
-        while (logContent.children.length > 50) {
+        // Limita o número de entradas do log para performance
+        if (logContent.children.length > 100) {
             logContent.removeChild(logContent.firstChild);
         }
+    }
+    
+    // Adiciona entrada de teste no log
+    addTestEntry(testName, result, details = '') {
+        const status = result ? 'PASSOU' : 'FALHOU';
+        const type = result ? 'test-pass' : 'test-fail';
+        const message = `🧪 TESTE: ${testName} - ${status}${details ? ` (${details})` : ''}`;
+        this.addLogEntry(message, type);
+    }
+    
+    // Adiciona entrada de sistema no log
+    addSystemEntry(message) {
+        this.addLogEntry(`⚙️ SISTEMA: ${message}`, 'system');
+    }
+    
+    // Adiciona entrada de debug no log
+    addDebugEntry(message) {
+        this.addLogEntry(`🐛 DEBUG: ${message}`, 'debug');
+    }
+    
+    // Adiciona entrada de erro no log
+    addErrorEntry(message) {
+        this.addLogEntry(`❌ ERRO: ${message}`, 'error');
+    }
+    
+    // Adiciona entrada de sucesso no log
+    addSuccessEntry(message) {
+        this.addLogEntry(`✅ SUCESSO: ${message}`, 'success');
     }
 
     // Mostra modal
