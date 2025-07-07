@@ -411,6 +411,12 @@ class UIManager {
     addSuccessEntry(message) {
         this.addLogEntry(`✅ SUCESSO: ${message}`, 'success');
     }
+    
+    // Limpa o log de eventos
+    clearLog() {
+        const logContent = document.getElementById('log-content');
+        logContent.innerHTML = '';
+    }
 
     // Mostra modal
     showModal(title, message, callback) {

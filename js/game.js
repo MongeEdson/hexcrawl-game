@@ -30,6 +30,9 @@ class HexcrawlGame {
 
     // Inicia um novo jogo
     newGame() {
+        // Limpa completamente o mapa existente
+        this.hexManager = new HexManager(this.terrainManager);
+        
         // Gera hex inicial
         const initialTerrain = this.terrainManager.generateInitialTerrain();
         const initialClimate = this.terrainManager.generateClimateZone();
@@ -38,21 +41,27 @@ class HexcrawlGame {
         this.hexManager.createHex(0, 0, initialTerrain, initialClimate, 'NORMAL', true);
         this.hexManager.currentHex = { q: 0, r: 0 };
         
-        // Reseta jogador
+        // Reseta jogador completamente
         this.player = new Player();
         this.player.resetJourneyPoints();
         
-        // Reseta tempo
+        // Reseta tempo completamente
         this.timeManager = new TimeManager();
+        
+        // Limpa o log de eventos
+        if (this.ui) {
+            this.ui.clearLog();
+            this.ui.addLogEntry('Jogo iniciado. Bem-vindo ao Hexcrawl!');
+            this.ui.addInfoEntry(`Jogo iniciado! Você está em um hex de ${this.terrainManager.getTerrainInfo(initialTerrain).name}.`);
+        }
+        
+        // Executa testes de inicialização
+        this.runInitializationTests();
         
         // Atualiza UI
         if (this.ui) {
             this.ui.updateUI();
             this.ui.render();
-            this.ui.addLogEntry(`Jogo iniciado! Você está em um hex de ${this.terrainManager.getTerrainInfo(initialTerrain).name}.`);
-            
-            // Executa testes automáticos de inicialização
-            this.runInitializationTests();
         }
     }
     
@@ -137,7 +146,7 @@ class HexcrawlGame {
     }
 
     // Cria informações de uma ação
-    createActionInfo(actionId) {
+    createActionInfo(actionId, targetHex = null) {
         const action = this.actionTable[actionId];
         const currentHex = this.hexManager.getCurrentHex();
         
@@ -148,9 +157,19 @@ class HexcrawlGame {
         if (typeof action.cost === 'number') {
             cost = action.cost;
         } else if (action.cost === 'entrance') {
-            cost = this.terrainManager.getEntranceCost(currentHex.terrain);
+            // Para viajar/marchar, usa o custo do hex de destino
+            if ((actionId === 'viajar' || actionId === 'marchar') && targetHex) {
+                cost = this.terrainManager.getEntranceCost(targetHex.terrain);
+            } else {
+                cost = this.terrainManager.getEntranceCost(currentHex.terrain);
+            }
         } else if (action.cost === 'half_entrance') {
-            cost = Math.ceil(this.terrainManager.getEntranceCost(currentHex.terrain) / 2);
+            // Para marchar, usa metade do custo do hex de destino
+            if (actionId === 'marchar' && targetHex) {
+                cost = Math.ceil(this.terrainManager.getEntranceCost(targetHex.terrain) / 2);
+            } else {
+                cost = Math.ceil(this.terrainManager.getEntranceCost(currentHex.terrain) / 2);
+            }
         } else if (action.cost === 'double_entrance') {
             cost = this.terrainManager.getEntranceCost(currentHex.terrain) * 2;
         } else if (action.cost === 'all_remaining') {
@@ -188,7 +207,13 @@ class HexcrawlGame {
         // Testa se a ação é válida
         this.ui.addTestEntry(`Validação da ação ${actionId}`, !!action, `Ação encontrada: ${action ? 'Sim' : 'Não'}`);
         
-        const actionInfo = this.createActionInfo(actionId);
+        // Para ações de viagem, obtém o hex de destino
+        let targetHex = null;
+        if ((actionId === 'viajar' || actionId === 'marchar') && target) {
+            targetHex = this.hexManager.getHex(target.q, target.r);
+        }
+        
+        const actionInfo = this.createActionInfo(actionId, targetHex);
         
         // Verifica se pode realizar a ação
         if (!actionInfo.enabled && actionId !== 'acampar' && actionId !== 'revelar') {
@@ -344,12 +369,17 @@ class HexcrawlGame {
 
     // Acampa
     performCamp() {
-        this.player.forceCamp();
+        // Primeiro, consome todos os PJ restantes
+        const pjGastos = this.player.currentJourneyPoints;
+        this.player.forceCamp(); // Zera os PJ e consome suprimentos
+        
+        // Avança o tempo do acampamento
         const timeResult = this.timeManager.forceCamp();
         
-        // PJ só são restaurados quando acampa, não automaticamente
+        // Depois, restaura os PJ para o máximo
         this.player.resetJourneyPoints();
-        this.ui.addDebugEntry('PJ restaurados pelo acampamento');
+        
+        this.ui.addDebugEntry(`Acampamento: ${pjGastos} PJ gastos, depois restaurados para ${this.player.maxJourneyPoints}`);
         
         return true;
     }
