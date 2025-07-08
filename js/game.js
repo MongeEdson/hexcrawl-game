@@ -58,6 +58,10 @@ class HexcrawlGame {
         // Executa testes de inicialização
         this.runInitializationTests();
         
+        // Executa teste automático de exploração no hex inicial
+        const initialHex = this.hexManager.getCurrentHex();
+        this.performAutoExploration(initialHex);
+        
         // Atualiza UI
         if (this.ui) {
             this.ui.updateUI();
@@ -338,9 +342,14 @@ class HexcrawlGame {
         // Move para o hex
         const success = this.hexManager.moveToHex(target.q, target.r);
         
-        if (success && isMarching) {
-            // Marchar dobra o custo de descansar
-            this.player.addExhaustion();
+        if (success) {
+            // Executa teste automático de exploração no novo hex
+            this.performAutoExploration(targetHex);
+            
+            if (isMarching) {
+                // Marchar dobra o custo de descansar
+                this.player.addExhaustion();
+            }
         }
         
         return success;
@@ -349,16 +358,115 @@ class HexcrawlGame {
     // Explora o hex atual
     performExplore() {
         const currentHex = this.hexManager.getCurrentHex();
+        
+        // Teste de exploração (1d6)
+        const explorationRoll = Math.floor(Math.random() * 6) + 1;
+        this.ui.addTestEntry('Teste de exploração', explorationRoll === 6, `Rolou ${explorationRoll} (precisa 6 para descoberta)`);
+        
+        if (explorationRoll === 6) {
+            // Encontrou algo! Determinar tipo de descoberta
+            const discovery = this.rollDiscovery(currentHex.danger);
+            currentHex.discoveries = currentHex.discoveries || [];
+            currentHex.discoveries.push(discovery);
+            
+            this.ui.addSuccessEntry(`Descoberta encontrada: ${discovery.name}!`);
+            this.ui.addInfoEntry(discovery.description);
+        } else {
+            this.ui.addInfoEntry('Você explorou a área minuciosamente, mas não encontrou nada de especial.');
+        }
+        
         currentHex.explored = true;
         this.player.incrementHexesExplored();
         
-        // Simula descoberta de algo interessante
-        const roll = Math.floor(Math.random() * 6) + 1;
-        if (roll >= 5) {
-            this.ui.addLogEntry('Você encontrou algo interessante durante a exploração!');
+        return true;
+    }
+    
+    // Rola para determinar tipo de descoberta
+    rollDiscovery(dangerLevel) {
+        let roll;
+        
+        // Determina o dado baseado no nível de perigo
+        if (dangerLevel === 'NORMAL') {
+            roll = Math.floor(Math.random() * 8) + 1; // 1d8
+        } else {
+            roll = Math.floor(Math.random() * 6) + 1; // 1d6 para PERIGOSO ou EXTREMO
         }
         
-        return true;
+        this.ui.addTestEntry(`Tipo de descoberta (${dangerLevel})`, true, `Rolou ${roll} em d${dangerLevel === 'NORMAL' ? '8' : '6'}`);
+        
+        // Determina o tipo de descoberta
+        const currentHex = this.hexManager.getCurrentHex();
+        const isOcean = currentHex.terrain === 'OCEANO';
+        
+        switch (roll) {
+            case 1:
+                return {
+                    type: 'mystery',
+                    name: 'Mistério',
+                    description: 'Você encontrou algo estranho e inexplicável. Ruínas antigas, símbolos misteriosos ou fenômenos sobrenaturais.'
+                };
+            case 2:
+                return {
+                    type: 'lair',
+                    name: 'Covil',
+                    description: 'Você descobriu o covil de uma criatura. Pode estar habitado ou abandonado, mas certamente há sinais de atividade.'
+                };
+            case 3:
+            case 5:
+                return {
+                    type: isOcean ? 'island' : 'water',
+                    name: isOcean ? 'Ilha' : 'Corpos d\'água',
+                    description: isOcean ? 'Uma pequena ilha emerge das águas, oferecendo um local para descanso.' : 'Você encontrou uma fonte de água fresca - rio, lago ou nascente.'
+                };
+            case 4:
+                return {
+                    type: 'road',
+                    name: 'Estrada',
+                    description: 'Você descobriu uma estrada ou trilha bem definida. Pode levar a outros locais importantes.'
+                };
+            case 6:
+                return {
+                    type: 'natural_hazard',
+                    name: 'Perigos naturais',
+                    description: 'Você identificou um perigo natural na área - precipícios, terreno instável, plantas venenosas ou outros riscos.'
+                };
+            case 7:
+            case 8:
+                return {
+                    type: 'civilization',
+                    name: 'Civilização',
+                    description: 'Você encontrou sinais de civilização - ruínas de construções, acampamentos abandonados ou até mesmo habitantes.'
+                };
+            default:
+                return {
+                    type: 'mystery',
+                    name: 'Mistério',
+                    description: 'Algo inexplicável foi descoberto neste local.'
+                };
+        }
+    }
+    
+    // Teste automático de descoberta ao entrar em um hex
+    performAutoExploration(hex) {
+        // Só faz teste automático se ainda não foi feito
+        if (hex.autoExplored) return;
+        
+        const explorationRoll = Math.floor(Math.random() * 6) + 1;
+        this.ui.addTestEntry('Teste automático de exploração', explorationRoll === 6, `Rolou ${explorationRoll} (precisa 6 para descoberta)`);
+        
+        if (explorationRoll === 6) {
+            // Encontrou algo! Determinar tipo de descoberta
+            const discovery = this.rollDiscovery(hex.danger);
+            hex.discoveries = hex.discoveries || [];
+            hex.discoveries.push(discovery);
+            
+            this.ui.addSuccessEntry(`Descoberta automática: ${discovery.name}!`);
+            this.ui.addInfoEntry(discovery.description);
+        } else {
+            this.ui.addInfoEntry('Você observa a área ao chegar, mas não nota nada de especial à primeira vista.');
+        }
+        
+        hex.autoExplored = true;
     }
 
     // Descansa

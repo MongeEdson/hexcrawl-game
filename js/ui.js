@@ -412,6 +412,11 @@ class UIManager {
         this.addLogEntry(`✅ SUCESSO: ${message}`, 'success');
     }
     
+    // Adiciona entrada de informação no log
+    addInfoEntry(message) {
+        this.addLogEntry(`ℹ️ INFO: ${message}`, 'info');
+    }
+    
     // Limpa o log de eventos
     clearLog() {
         const logContent = document.getElementById('log-content');
